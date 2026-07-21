@@ -19,6 +19,6 @@ SAMPLE_DIR="${SCRIPT_DIR}/sample_data"
     "${SAMPLE_DIR}/annotations.geojson" \
     "${SAMPLE_DIR}/roi_crops" \
     --roi-mode circle \
-    --radius 250 \
-    --magnifications 20,60 \
+    --radius 100 \
+    --magnifications 20,80 \
     --format png

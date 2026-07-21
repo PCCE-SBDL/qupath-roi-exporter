@@ -11,6 +11,12 @@
  *       -a output=<output.ome.tif> -a width=5000 -a height=5000
  *
  * If -a x / -a y are omitted, the crop is centered on the full image.
+ *
+ * By default the crop is written with lossless compression. Pass
+ * -a compression=jpeg to use lossy JPEG compression instead (QuPath's
+ * default JPEG quality — not independently configurable via this API),
+ * for a much smaller file. Useful for sample/demo data that needs to fit
+ * under a repo host's file-size limits.
  */
 
 import qupath.lib.images.writers.ome.OMEPyramidWriter
@@ -37,6 +43,7 @@ def cropHeight = (getArg('height', '5000') as Integer)
 def xArg = getArg('x', null)   // top-left x in full-resolution pixels; null = center
 def yArg = getArg('y', null)   // top-left y in full-resolution pixels; null = center
 def tileSize = (getArg('tileSize', '512') as Integer)
+def compression = getArg('compression', 'lossless')   // 'lossless' or 'jpeg'
 // -------------------------------------------------
 
 def imageData = getCurrentImageData()
@@ -57,12 +64,18 @@ println "Cropping region: x=${x}, y=${y}, width=${cropWidth}, height=${cropHeigh
 
 def request = RegionRequest.createInstance(server.getPath(), 1.0, x, y, cropWidth, cropHeight)
 
-new OMEPyramidWriter.Builder(server)
+def builder = new OMEPyramidWriter.Builder(server)
         .region(request)
         .tileSize(tileSize)
         .parallelize()
-        .losslessCompression()
-        .build()
-        .writePyramid(outputPath)
+
+if (compression == 'jpeg') {
+    builder = builder.compression(OMEPyramidWriter.CompressionType.JPEG)
+    println "Using lossy JPEG compression"
+} else {
+    builder = builder.losslessCompression()
+}
+
+builder.build().writePyramid(outputPath)
 
 println "Wrote cropped OME-TIFF to ${outputPath}"
